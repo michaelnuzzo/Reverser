@@ -54,42 +54,9 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    void setReverserLength(float newLength)
-    {
-        reverserLength = newLength;
-
-        inWindow.reset();
-        outWindow.reset();
-
-        juce::AudioBuffer<float> initializeWithZeros;
-        initializeWithZeros.setSize(numChannels, reverserLength);
-        initializeWithZeros.clear();
-
-        inWindow.read(initializeWithZeros);
-        outWindow.read(initializeWithZeros);
-
-        if(newLength*getSampleRate() > 0)
-        {
-            windowLength = reverserLength/1000.f*getSampleRate();
-        }
-        else
-        {
-            windowLength = 2;
-        }
-        dspProcessor.setSize(numChannels, windowLength);
-    }
-
+    void setReverserLength(float newLength);
     inline void setDryWet(float newDryWet) {dryWet = newDryWet;}
-
-    void runDSP()
-    {
-        inWindow.read(dspProcessor);
-        mixer.setWetMixProportion(dryWet);
-        mixer.pushDrySamples(dspProcessor);
-        dspProcessor.reverse(0, dspProcessor.getNumSamples());
-        mixer.mixWetSamples(dspProcessor);
-        outWindow.write(dspProcessor);
-    }
+    void runDSP();
 
 private:
     ASyncBuffer inWindow;

@@ -9,6 +9,41 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+void NewProjectAudioProcessor::setReverserLength(float newLength)
+{
+    reverserLength = newLength;
+
+    inWindow.reset();
+    outWindow.reset();
+
+    juce::AudioBuffer<float> initializeWithZeros;
+    initializeWithZeros.setSize(numChannels, reverserLength);
+    initializeWithZeros.clear();
+
+    inWindow.read(initializeWithZeros);
+    outWindow.read(initializeWithZeros);
+
+    if(newLength*getSampleRate() > 0)
+    {
+        windowLength = reverserLength/1000.f*getSampleRate();
+    }
+    else
+    {
+        windowLength = 2;
+    }
+    dspProcessor.setSize(numChannels, windowLength);
+}
+
+void NewProjectAudioProcessor::runDSP()
+{
+    inWindow.read(dspProcessor);
+    mixer.setWetMixProportion(dryWet);
+    mixer.pushDrySamples(dspProcessor);
+    dspProcessor.reverse(0, dspProcessor.getNumSamples());
+    mixer.mixWetSamples(dspProcessor);
+    outWindow.write(dspProcessor);
+}
+
 //==============================================================================
 NewProjectAudioProcessor::NewProjectAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -139,8 +174,6 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-
-    
 
     if(windowLength > 1)
     {

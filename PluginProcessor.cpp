@@ -10,7 +10,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-NewProjectAudioProcessor::NewProjectAudioProcessor()
+ReverserAudioProcessor::ReverserAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -28,17 +28,17 @@ NewProjectAudioProcessor::NewProjectAudioProcessor()
     avpts.state = juce::ValueTree("Parameters");
 }
 
-NewProjectAudioProcessor::~NewProjectAudioProcessor()
+ReverserAudioProcessor::~ReverserAudioProcessor()
 {
 }
 
 //==============================================================================
-const juce::String NewProjectAudioProcessor::getName() const
+const juce::String ReverserAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool NewProjectAudioProcessor::acceptsMidi() const
+bool ReverserAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -47,7 +47,7 @@ bool NewProjectAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool NewProjectAudioProcessor::producesMidi() const
+bool ReverserAudioProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -56,7 +56,7 @@ bool NewProjectAudioProcessor::producesMidi() const
    #endif
 }
 
-bool NewProjectAudioProcessor::isMidiEffect() const
+bool ReverserAudioProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -65,37 +65,37 @@ bool NewProjectAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double NewProjectAudioProcessor::getTailLengthSeconds() const
+double ReverserAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int NewProjectAudioProcessor::getNumPrograms()
+int ReverserAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int NewProjectAudioProcessor::getCurrentProgram()
+int ReverserAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void NewProjectAudioProcessor::setCurrentProgram (int index)
+void ReverserAudioProcessor::setCurrentProgram (int index)
 {
 }
 
-const juce::String NewProjectAudioProcessor::getProgramName (int index)
+const juce::String ReverserAudioProcessor::getProgramName (int index)
 {
     return {};
 }
 
-void NewProjectAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void ReverserAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
 }
 
 //==============================================================================
-void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void ReverserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     juce::dsp::ProcessSpec spec;
     spec.maximumBlockSize = 1000000;
@@ -105,14 +105,14 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     mixer.reset();
 }
 
-void NewProjectAudioProcessor::releaseResources()
+void ReverserAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool NewProjectAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool ReverserAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
     juce::ignoreUnused (layouts);
@@ -135,7 +135,7 @@ bool NewProjectAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 }
 #endif
 
-void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void ReverserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
@@ -171,24 +171,24 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 }
 
 //==============================================================================
-bool NewProjectAudioProcessor::hasEditor() const
+bool ReverserAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor* NewProjectAudioProcessor::createEditor()
+juce::AudioProcessorEditor* ReverserAudioProcessor::createEditor()
 {
-    return new NewProjectAudioProcessorEditor (*this);
+    return new ReverserAudioProcessorEditor (*this);
 }
 
 //==============================================================================
-void NewProjectAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void ReverserAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     std::unique_ptr<juce::XmlElement> xml(avpts.state.createXml());
     copyXmlToBinary(*xml, destData);
 }
 
-void NewProjectAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void ReverserAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
 
@@ -205,10 +205,10 @@ void NewProjectAudioProcessor::setStateInformation (const void* data, int sizeIn
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new NewProjectAudioProcessor();
+    return new ReverserAudioProcessor();
 }
 
-//void NewProjectAudioProcessor::setReverserLength(float newLength)
+//void ReverserAudioProcessor::setReverserLength(float newLength)
 //{
 //    reverserLength = newLength;
 //
@@ -233,7 +233,7 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 //    dspProcessor.setSize(numChannels, windowLength);
 //}
 
-void NewProjectAudioProcessor::runDSP()
+void ReverserAudioProcessor::runDSP()
 {
     inWindow.read(dspProcessor);
     mixer.setWetMixProportion(*avpts.getRawParameterValue("DRYWET"));
@@ -243,7 +243,7 @@ void NewProjectAudioProcessor::runDSP()
     outWindow.write(dspProcessor);
 }
 
-juce::AudioProcessorValueTreeState::ParameterLayout NewProjectAudioProcessor::createParameters()
+juce::AudioProcessorValueTreeState::ParameterLayout ReverserAudioProcessor::createParameters()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     params.push_back(std::make_unique<juce::AudioParameterFloat>("TIME","Time", 0.f, 1000.f, 500.f));
@@ -251,7 +251,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout NewProjectAudioProcessor::cr
     return { params.begin(), params.end() };
 }
 
-void NewProjectAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
+void ReverserAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
 {
     if(parameterID == "TIME")
     {

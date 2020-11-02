@@ -16,19 +16,24 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
 
-    addAndMakeVisible(timeDial);
-    timeDial.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    timeDial.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
-    timeDial.setRange(0.0f, 1000.0f, 0.1f);
-    timeDial.setValue(500.f);
-    timeDial.onValueChange = [this] {audioProcessor.setReverserLength((float)timeDial.getValue());};
+    addAndMakeVisible(timeKnob);
+    timeKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    timeKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
+//    timeKnob.setRange(0.0f, 1000.0f, 0.1f);
+//    timeKnob.setValue(500.f);
+//    timeKnob.onValueChange = [this] {audioProcessor.setReverserLength((float)timeKnob.getValue());};
+    timeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(p.getAVPTS(),"TIME",timeKnob);
+    
+    
 
     addAndMakeVisible(dryWetKnob);
     dryWetKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
     dryWetKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
-    dryWetKnob.setRange(0.0f, 1.0f, 0.01f);
-    dryWetKnob.setValue(1.0f);
-    dryWetKnob.onValueChange = [this] {audioProcessor.setDryWet((float)dryWetKnob.getValue());};
+//    dryWetKnob.setRange(0.0f, 1.0f, 0.01f);
+//    dryWetKnob.setValue(1.0f);
+//    dryWetKnob.onValueChange = [this] {audioProcessor.setDryWet((float)dryWetKnob.getValue());};
+    dryWetAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(p.getAVPTS(),"DRYWET",dryWetKnob);
+
 
     setSize (400, 300);
 }
@@ -49,6 +54,6 @@ void NewProjectAudioProcessorEditor::paint (juce::Graphics& g)
 
 void NewProjectAudioProcessorEditor::resized()
 {
-    timeDial.setBounds(100, 200, 100, 100);
+    timeKnob.setBounds(100, 200, 100, 100);
     dryWetKnob.setBounds(300, 200, 100, 100);
 }

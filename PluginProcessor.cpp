@@ -9,41 +9,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-void NewProjectAudioProcessor::setReverserLength(float newLength)
-{
-    reverserLength = newLength;
-
-    inWindow.reset();
-    outWindow.reset();
-
-    juce::AudioBuffer<float> initializeWithZeros;
-    initializeWithZeros.setSize(numChannels, reverserLength);
-    initializeWithZeros.clear();
-
-    inWindow.read(initializeWithZeros);
-    outWindow.read(initializeWithZeros);
-
-    if(newLength*getSampleRate() > 0)
-    {
-        windowLength = reverserLength/1000.f*getSampleRate();
-    }
-    else
-    {
-        windowLength = 2;
-    }
-    dspProcessor.setSize(numChannels, windowLength);
-}
-
-void NewProjectAudioProcessor::runDSP()
-{
-    inWindow.read(dspProcessor);
-    mixer.setWetMixProportion(dryWet);
-    mixer.pushDrySamples(dspProcessor);
-    dspProcessor.reverse(0, dspProcessor.getNumSamples());
-    mixer.mixWetSamples(dspProcessor);
-    outWindow.write(dspProcessor);
-}
-
 //==============================================================================
 NewProjectAudioProcessor::NewProjectAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -56,7 +21,11 @@ NewProjectAudioProcessor::NewProjectAudioProcessor()
                      #endif
                        )
 #endif
+                    , avpts(*this, nullptr, "Parameters", createParameters())
 {
+    avpts.addParameterListener("TIME", this);
+    avpts.addParameterListener("DRYWET", this);
+    avpts.state = juce::ValueTree("Parameters");
 }
 
 NewProjectAudioProcessor::~NewProjectAudioProcessor()
@@ -215,15 +184,21 @@ juce::AudioProcessorEditor* NewProjectAudioProcessor::createEditor()
 //==============================================================================
 void NewProjectAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
+    std::unique_ptr<juce::XmlElement> xml(avpts.state.createXml());
+    copyXmlToBinary(*xml, destData);
 }
 
 void NewProjectAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
+    if(xmlState.get() != nullptr)
+    {
+        if(xmlState->hasTagName("Parameters"))
+        {
+            avpts.state = juce::ValueTree::fromXml(*xmlState);
+        }
+    }
 }
 
 //==============================================================================
@@ -231,4 +206,79 @@ void NewProjectAudioProcessor::setStateInformation (const void* data, int sizeIn
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new NewProjectAudioProcessor();
+}
+
+//void NewProjectAudioProcessor::setReverserLength(float newLength)
+//{
+//    reverserLength = newLength;
+//
+//    inWindow.reset();
+//    outWindow.reset();
+//
+//    juce::AudioBuffer<float> initializeWithZeros;
+//    initializeWithZeros.setSize(numChannels, reverserLength);
+//    initializeWithZeros.clear();
+//
+//    inWindow.read(initializeWithZeros);
+//    outWindow.read(initializeWithZeros);
+//
+//    if(newLength*getSampleRate() > 0)
+//    {
+//        windowLength = reverserLength/1000.f*getSampleRate();
+//    }
+//    else
+//    {
+//        windowLength = 2;
+//    }
+//    dspProcessor.setSize(numChannels, windowLength);
+//}
+
+void NewProjectAudioProcessor::runDSP()
+{
+    inWindow.read(dspProcessor);
+    mixer.setWetMixProportion(*avpts.getRawParameterValue("DRYWET"));
+    mixer.pushDrySamples(dspProcessor);
+    dspProcessor.reverse(0, dspProcessor.getNumSamples());
+    mixer.mixWetSamples(dspProcessor);
+    outWindow.write(dspProcessor);
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout NewProjectAudioProcessor::createParameters()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("TIME","Time", 0.f, 1000.f, 500.f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("DRYWET","DryWet", 0.f, 1.f, 1.f));
+    return { params.begin(), params.end() };
+}
+
+void NewProjectAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    if(parameterID == "TIME")
+    {
+        reverserLength = newValue;
+
+        inWindow.reset();
+        outWindow.reset();
+
+        juce::AudioBuffer<float> initializeWithZeros;
+        initializeWithZeros.setSize(numChannels, reverserLength);
+        initializeWithZeros.clear();
+
+        inWindow.read(initializeWithZeros);
+        outWindow.read(initializeWithZeros);
+
+        if(reverserLength*getSampleRate() > 0)
+        {
+            windowLength = reverserLength/1000.f*getSampleRate();
+        }
+        else
+        {
+            windowLength = 2;
+        }
+        dspProcessor.setSize(numChannels, windowLength);
+    }
+    if(parameterID == "DRYWET")
+    {
+        dryWet = newValue;
+    }
 }

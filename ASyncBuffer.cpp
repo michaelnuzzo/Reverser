@@ -15,6 +15,10 @@ ASyncBuffer::ASyncBuffer()
     circularBuffer.setSize(2,1000000);
 }
 
+ASyncBuffer::~ASyncBuffer()
+{
+}
+
 void ASyncBuffer::write(const juce::AudioBuffer<float>& inBuffer)
 {
     int start1, size1, start2, size2;

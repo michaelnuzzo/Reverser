@@ -14,7 +14,9 @@
 //==============================================================================
 /**
 */
-class NewProjectAudioProcessor  : public juce::AudioProcessor
+class NewProjectAudioProcessor  : public juce::AudioProcessor,
+private juce::AudioProcessorValueTreeState::Listener
+
 {
 public:
     //==============================================================================
@@ -57,8 +59,13 @@ public:
     void setReverserLength(float newLength);
     inline void setDryWet(float newDryWet) {dryWet = newDryWet;}
     void runDSP();
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
+
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
+    juce::AudioProcessorValueTreeState& getAVPTS() {return avpts;}
 
 private:
+    juce::AudioProcessorValueTreeState avpts;
     ASyncBuffer inWindow;
     ASyncBuffer outWindow;
     juce::dsp::DryWetMixer<float> mixer;

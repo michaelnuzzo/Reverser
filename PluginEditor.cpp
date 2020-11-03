@@ -13,27 +13,19 @@
 ReverserAudioProcessorEditor::ReverserAudioProcessorEditor (ReverserAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
 
     addAndMakeVisible(timeKnob);
     timeKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
     timeKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
-//    timeKnob.setRange(0.0f, 1000.0f, 0.1f);
-//    timeKnob.setValue(500.f);
-//    timeKnob.onValueChange = [this] {audioProcessor.setReverserLength((float)timeKnob.getValue());};
-    timeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(p.getAVPTS(),"TIME",timeKnob);
+    timeKnob.onValueChange = [this] {audioProcessor.setUpdate();};
+    timeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.getParameters(),"TIME",timeKnob);
     
     
 
     addAndMakeVisible(dryWetKnob);
-    dryWetKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    dryWetKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
-//    dryWetKnob.setRange(0.0f, 1.0f, 0.01f);
-//    dryWetKnob.setValue(1.0f);
-//    dryWetKnob.onValueChange = [this] {audioProcessor.setDryWet((float)dryWetKnob.getValue());};
-    dryWetAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(p.getAVPTS(),"DRYWET",dryWetKnob);
-
+    dryWetKnob.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+    dryWetKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+    dryWetAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.getParameters(),"DRYWET",dryWetKnob);
 
     setSize (400, 300);
 }

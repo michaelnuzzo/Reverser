@@ -35,7 +35,7 @@ ReverserAudioProcessorEditor::ReverserAudioProcessorEditor (ReverserAudioProcess
     addAndMakeVisible(dryWetKnob);
 
     setResizable(true, true);
-    setResizeLimits(400, 300, 1600, 900);
+    setResizeLimits(400, 600, 1600, 900);
     setSize (800, 600);
 }
 
@@ -46,8 +46,6 @@ ReverserAudioProcessorEditor::~ReverserAudioProcessorEditor()
 //==============================================================================
 void ReverserAudioProcessorEditor::paint (juce::Graphics& g)
 {
-
-
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (juce::Colours::aliceblue);
     g.setFont (15.0f);

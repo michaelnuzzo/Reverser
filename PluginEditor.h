@@ -29,10 +29,9 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     ReverserAudioProcessor& audioProcessor;
-    juce::Slider timeKnob;
-    juce::Slider dryWetKnob;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> timeAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dryWetAttachment;
+    juce::Label timeLabel, dryWetLabel;
+    juce::Slider timeKnob, dryWetKnob;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> timeAttachment, dryWetAttachment;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ReverserAudioProcessorEditor)

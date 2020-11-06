@@ -24,7 +24,7 @@ public:
     inline int getNumUnread() {return abstractFifo.getNumReady();}
 
 private:
-    const int MAX_LENGTH = 300000;
+    const int MAX_LENGTH = 1000000;
     juce::AbstractFifo abstractFifo{MAX_LENGTH};
     juce::AudioBuffer<float> circularBuffer;
     //==============================================================================

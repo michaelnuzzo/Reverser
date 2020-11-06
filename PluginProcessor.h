@@ -54,8 +54,6 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    void setReverserLength(float newLength);
-    inline void setDryWet(float newDryWet) {dryWet = newDryWet;}
     void runDSP();
     inline void setUpdate() {requiresUpdate = true;}
     void updateLength();
@@ -65,14 +63,14 @@ public:
 
 private:
     juce::AudioProcessorValueTreeState parameters;
+    juce::dsp::DryWetMixer<float> mixer;
     ASyncBuffer inWindow;
     ASyncBuffer outWindow;
-    juce::dsp::DryWetMixer<float> mixer;
+    juce::AudioBuffer<float> subsection;
     juce::AudioBuffer<float> dspProcessor;
     bool requiresUpdate = true;
     float reverserLength; // in seconds
-    float dryWet;
-    int windowLength;
+    int windowLength; // in samples
     const int NUM_CHANNELS = 2;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ReverserAudioProcessor)

@@ -18,13 +18,14 @@ public:
     ASyncBuffer();
     ~ASyncBuffer();
 
-    void write(const juce::AudioBuffer<float>& inBuffer);
-    int read(juce::AudioBuffer<float>& outBuffer);
+    void write(const juce::AudioBuffer<float>& inBuffer, int numToWrite = -1, int numToMark = -1, int ID = -1);
+    int read(juce::AudioBuffer<float>& outBuffer, int numToRead = -1, int numToMark = -1, int ID = -1);
     void reset();
     inline int getNumUnread() {return abstractFifo.getNumReady();}
 
 private:
-    juce::AbstractFifo abstractFifo{1000000};
+    const int MAX_LENGTH = 300000;
+    juce::AbstractFifo abstractFifo{MAX_LENGTH};
     juce::AudioBuffer<float> circularBuffer;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ASyncBuffer)

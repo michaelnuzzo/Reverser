@@ -152,24 +152,25 @@ void ReverserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     {
         for(int i = 0; i <= int(buffer.getNumSamples()/windowLength); i++)
         {
-            juce::AudioBuffer<float> subsection;
             int startIdx = i*windowLength;
             int endIdx = juce::jmin((i+1)*windowLength-1, buffer.getNumSamples()-1);
-            subsection.setSize(NUM_CHANNELS, (endIdx-startIdx)+1);
+            subsection.setSize(NUM_CHANNELS, (endIdx+1)-startIdx);
             for(int ch = 0; ch < NUM_CHANNELS; ch++)
             {
                 subsection.copyFrom(ch, 0, buffer, ch, startIdx, subsection.getNumSamples());
             }
-            inWindow.write(subsection);
+
+            inWindow.write(subsection,-1,-1,1);
 
             if(inWindow.getNumUnread() >= windowLength)
             {
                 runDSP();
             }
         }
+
         if(outWindow.getNumUnread() >= buffer.getNumSamples())
         {
-            outWindow.read(buffer);
+            outWindow.read(buffer,-1,-1,2);
         }
     }
 }
@@ -215,12 +216,12 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 void ReverserAudioProcessor::runDSP()
 {
-    inWindow.read(dspProcessor);
+    inWindow.read(dspProcessor,-1,-1,1);
     mixer.setWetMixProportion(*parameters.getRawParameterValue("DRYWET"));
     mixer.pushDrySamples(dspProcessor);
     dspProcessor.reverse(0, dspProcessor.getNumSamples());
     mixer.mixWetSamples(dspProcessor);
-    outWindow.write(dspProcessor);
+    outWindow.write(dspProcessor,-1,-1,2);
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout ReverserAudioProcessor::createParameters()
@@ -234,15 +235,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReverserAudioProcessor::crea
 void ReverserAudioProcessor::updateLength()
 {
     reverserLength = *parameters.getRawParameterValue("TIME");
+
     inWindow.reset();
     outWindow.reset();
-
-    juce::AudioBuffer<float> initializeWithZeros;
-    initializeWithZeros.setSize(NUM_CHANNELS, reverserLength);
-    initializeWithZeros.clear();
-
-    inWindow.read(initializeWithZeros);
-    outWindow.read(initializeWithZeros);
 
     if(reverserLength*getSampleRate() > 0)
     {
@@ -252,6 +247,7 @@ void ReverserAudioProcessor::updateLength()
     {
         windowLength = 2;
     }
+
     dspProcessor.setSize(NUM_CHANNELS, windowLength);
     requiresUpdate = false;
 }

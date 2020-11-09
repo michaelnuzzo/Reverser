@@ -148,7 +148,7 @@ void ReverserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         updateLength();
     }
 
-    if(windowLength > 1)
+    if(windowLength > 2)
     {
         for(int i = 0; i <= int(buffer.getNumSamples()/windowLength); i++)
         {
@@ -160,9 +160,9 @@ void ReverserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
                 subsection.copyFrom(ch, 0, buffer, ch, startIdx, subsection.getNumSamples());
             }
 
-            inWindow.write(subsection,-1,-1,1);
+            inWindow.write(subsection);
 
-            if(inWindow.getNumUnread() >= windowLength)
+            if(inWindow.getNumUnread() >= windowLength/2)
             {
                 runDSP();
             }
@@ -170,7 +170,7 @@ void ReverserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
 
         if(outWindow.getNumUnread() >= buffer.getNumSamples())
         {
-            outWindow.read(buffer,-1,-1,2);
+            outWindow.read(buffer);
         }
     }
 }
@@ -214,15 +214,7 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
     return new ReverserAudioProcessor();
 }
 
-void ReverserAudioProcessor::runDSP()
-{
-    inWindow.read(dspProcessor,-1,-1,1);
-    mixer.setWetMixProportion(*parameters.getRawParameterValue("DRYWET"));
-    mixer.pushDrySamples(dspProcessor);
-    dspProcessor.reverse(0, dspProcessor.getNumSamples());
-    mixer.mixWetSamples(dspProcessor);
-    outWindow.write(dspProcessor,-1,-1,2);
-}
+//****************************************************************************//
 
 juce::AudioProcessorValueTreeState::ParameterLayout ReverserAudioProcessor::createParameters()
 {
@@ -242,6 +234,7 @@ void ReverserAudioProcessor::updateLength()
     if(reverserLength*getSampleRate() > 0)
     {
         windowLength = reverserLength/1000.f*getSampleRate();
+        windowLength = 2*(int)(windowLength/2.);
     }
     else
     {
@@ -249,5 +242,32 @@ void ReverserAudioProcessor::updateLength()
     }
 
     dspProcessor.setSize(NUM_CHANNELS, windowLength);
+    curHalf.setSize(NUM_CHANNELS, windowLength/2);
+    lastHalf.setSize(NUM_CHANNELS, windowLength/2);
+    dspProcessor.clear();
+    curHalf.clear();
+    lastHalf.clear();
+
+    window.fillWindowingTables(windowLength, juce::dsp::WindowingFunction<float>::triangular);
+    
     requiresUpdate = false;
+}
+
+void ReverserAudioProcessor::runDSP()
+{
+    inWindow.read(dspProcessor,dspProcessor.getNumSamples(),dspProcessor.getNumSamples()/2);
+    mixer.setWetMixProportion(*parameters.getRawParameterValue("DRYWET"));
+    mixer.pushDrySamples(dspProcessor);
+
+    dspProcessor.reverse(0, dspProcessor.getNumSamples());
+    for(int ch = 0; ch < NUM_CHANNELS; ch++)
+    {
+        window.multiplyWithWindowingTable(dspProcessor.getWritePointer(ch), dspProcessor.getNumSamples());
+        curHalf.copyFrom(ch, 0, dspProcessor, ch, 0, windowLength/2);
+        curHalf.addFrom(ch, 0, lastHalf, ch, 0, windowLength/2);
+        lastHalf.copyFrom(ch, 0, dspProcessor, ch, windowLength/2, windowLength/2);
+    }
+
+    mixer.mixWetSamples(curHalf);
+    outWindow.write(curHalf);
 }

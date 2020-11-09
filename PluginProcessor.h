@@ -62,16 +62,21 @@ public:
     juce::AudioProcessorValueTreeState& getParameters() {return parameters;}
 
 private:
-    juce::AudioProcessorValueTreeState parameters;
-    juce::dsp::DryWetMixer<float> mixer;
-    ASyncBuffer inWindow;
-    ASyncBuffer outWindow;
-    juce::AudioBuffer<float> subsection;
-    juce::AudioBuffer<float> dspProcessor;
+    const int NUM_CHANNELS = 2;
     bool requiresUpdate = true;
     float reverserLength; // in seconds
     int windowLength; // in samples
-    const int NUM_CHANNELS = 2;
+    ASyncBuffer inWindow;
+    ASyncBuffer outWindow;
+    juce::AudioProcessorValueTreeState parameters;
+    juce::dsp::DryWetMixer<float> mixer;
+    juce::dsp::WindowingFunction<float> window{1, juce::dsp::WindowingFunction<float>::triangular};
+    juce::AudioBuffer<float> subsection;
+    juce::AudioBuffer<float> dspProcessor;
+    juce::AudioBuffer<float> curHalf;
+    juce::AudioBuffer<float> lastHalf;
+
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ReverserAudioProcessor)
 };

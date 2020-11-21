@@ -19,7 +19,7 @@ ASyncBuffer::~ASyncBuffer()
 {
 }
 
-void ASyncBuffer::write(const juce::AudioBuffer<float>& inBuffer, int numToWrite, int numToMark, int ID)
+void ASyncBuffer::push(const juce::AudioBuffer<float>& inBuffer, int numToWrite, int numToMark, int ID)
 {
     if(numToWrite < 0)
     {
@@ -32,6 +32,7 @@ void ASyncBuffer::write(const juce::AudioBuffer<float>& inBuffer, int numToWrite
 
     int start1, size1, start2, size2;
     abstractFifo.prepareToWrite(numToWrite, start1, size1, start2, size2);
+    jassert(numToWrite == size1+size2);
     int numChannels = juce::jmin(inBuffer.getNumChannels(), circularBuffer.getNumChannels());
 
     if(size1 > 0)
@@ -52,7 +53,7 @@ void ASyncBuffer::write(const juce::AudioBuffer<float>& inBuffer, int numToWrite
     abstractFifo.finishedWrite(numToMark);
 }
 
-int ASyncBuffer::read(juce::AudioBuffer<float>& outBuffer, int numToRead, int numToMark, int ID)
+int ASyncBuffer::pop(juce::AudioBuffer<float>& outBuffer, int numToRead, int numToMark, int ID)
 {
     if(numToRead < 0)
     {
@@ -65,6 +66,7 @@ int ASyncBuffer::read(juce::AudioBuffer<float>& outBuffer, int numToRead, int nu
 
     int start1, size1, start2, size2;
     abstractFifo.prepareToRead(numToRead, start1, size1, start2, size2);
+    jassert(numToRead == size1+size2);
     int numChannels = juce::jmin(outBuffer.getNumChannels(), circularBuffer.getNumChannels());
 
     if(size1 > 0)

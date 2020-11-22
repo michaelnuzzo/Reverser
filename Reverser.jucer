@@ -6,7 +6,7 @@
               companyWebsite="https://github.com/michaelnuzzo" version="0.2.0">
   <MAINGROUP id="KazFH7" name="Reverser">
     <GROUP id="{5B47DE3F-F255-0D95-1C7F-9245335FEC07}" name="Media">
-      <FILE id="PJ1id1" name="logo.png" compile="0" resource="1" file="logo.png"/>
+      <FILE id="r61z8O" name="logo.png" compile="0" resource="1" file="docs/imgs/logo.png"/>
     </GROUP>
     <GROUP id="{7A442109-6AC4-48FD-8924-C7FB95B6FBDC}" name="Source">
       <FILE id="voV4XM" name="ASyncBuffer.cpp" compile="1" resource="0" file="Source/ASyncBuffer.cpp"/>

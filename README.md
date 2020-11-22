@@ -1,3 +1,3 @@
 # Reverser
 
-![Reverser Screenshot](screenshot.png)
+![Reverser Screenshot](docs/imgs/screenshot.png)

@@ -291,6 +291,7 @@ void ReverserAudioProcessor::runDSP()
         curHalf.addFrom(ch, 0, lastHalf, ch, 0, windowLength/2);
         lastHalf.copyFrom(ch, 0, dspProcessor, ch, (windowLength/2)-1, windowLength/2);
     }
+    curHalf.applyGain(0.5);
 
     mixer.mixWetSamples(curHalf);
     outWindow.push(curHalf);

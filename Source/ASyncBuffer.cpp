@@ -19,11 +19,11 @@ ASyncBuffer::~ASyncBuffer()
 {
 }
 
-void ASyncBuffer::push(const juce::AudioBuffer<float>& inBuffer, int numToWrite, int numToMark, int ID)
+void ASyncBuffer::push(const juce::dsp::AudioBlock<float> inBuffer, int numToWrite, int numToMark, int ID)
 {
     if(numToWrite < 0)
     {
-        numToWrite = inBuffer.getNumSamples();
+        numToWrite = (int)inBuffer.getNumSamples();
     }
     if(numToMark < 0)
     {
@@ -33,31 +33,28 @@ void ASyncBuffer::push(const juce::AudioBuffer<float>& inBuffer, int numToWrite,
     int start1, size1, start2, size2;
     abstractFifo.prepareToWrite(numToWrite, start1, size1, start2, size2);
     jassert(numToWrite == size1+size2);
-    int numChannels = juce::jmin(inBuffer.getNumChannels(), circularBuffer.getNumChannels());
 
     if(size1 > 0)
     {
-        for(int ch = 0; ch < numChannels; ch++)
-        {
-            circularBuffer.copyFrom(ch, start1, inBuffer, ch, 0, size1);
-        }
+        auto circularChunk = juce::dsp::AudioBlock<float>(circularBuffer).getSubBlock(start1, size1);
+        auto bufferChunk = inBuffer.getSubBlock(0, size1);
+        circularChunk.copyFrom(bufferChunk);
     }
     if(size2 > 0)
     {
-        for(int ch = 0; ch < numChannels; ch++)
-        {
-            circularBuffer.copyFrom(ch, start2, inBuffer, ch, size1, size2);
-        }
+        auto circularChunk = juce::dsp::AudioBlock<float>(circularBuffer).getSubBlock(start2, size2);
+        auto bufferChunk = inBuffer.getSubBlock(size1, size2);
+        circularChunk.copyFrom(bufferChunk);
     }
 
     abstractFifo.finishedWrite(numToMark);
 }
 
-int ASyncBuffer::pop(juce::AudioBuffer<float>& outBuffer, int numToRead, int numToMark, int ID)
+void ASyncBuffer::pop(const juce::dsp::AudioBlock<float> outBuffer, int numToRead, int numToMark, int ID)
 {
     if(numToRead < 0)
     {
-        numToRead = outBuffer.getNumSamples();
+        numToRead = (int)outBuffer.getNumSamples();
     }
     if(numToMark < 0)
     {
@@ -67,25 +64,21 @@ int ASyncBuffer::pop(juce::AudioBuffer<float>& outBuffer, int numToRead, int num
     int start1, size1, start2, size2;
     abstractFifo.prepareToRead(numToRead, start1, size1, start2, size2);
     jassert(numToRead == size1+size2);
-    int numChannels = juce::jmin(outBuffer.getNumChannels(), circularBuffer.getNumChannels());
 
     if(size1 > 0)
     {
-        for(int ch = 0; ch < numChannels; ch++)
-        {
-            outBuffer.copyFrom(ch, 0, circularBuffer, ch, start1, size1);
-        }
+        auto circularChunk = juce::dsp::AudioBlock<float>(circularBuffer).getSubBlock(start1, size1);
+        auto bufferChunk = outBuffer.getSubBlock(0, size1);
+        bufferChunk.copyFrom(circularChunk);
     }
     if(size2 > 0)
     {
-        for(int ch = 0; ch < numChannels; ch++)
-        {
-            outBuffer.copyFrom(ch, size1, circularBuffer, ch, start2, size2);
-        }
+        auto circularChunk = juce::dsp::AudioBlock<float>(circularBuffer).getSubBlock(start2, size2);
+        auto bufferChunk = outBuffer.getSubBlock(size1, size2);
+        bufferChunk.copyFrom(circularChunk);
     }
 
     abstractFifo.finishedRead(numToMark);
-    return(size1+size2);
 }
 
 void ASyncBuffer::reset()

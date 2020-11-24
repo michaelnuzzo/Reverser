@@ -148,9 +148,9 @@ void ReverserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         updateLength();
     }
 
-    if(windowLength > 2)
+    if(windowLength/2 > 1)
     {
-        for(int i = 0; i <= int(buffer.getNumSamples()/(windowLength/2)); i++)
+        for(int i = 0; i <= int(buffer.getNumSamples()-1)/(windowLength/2); i++)
         {
             // if windowLength > bufferLength, then this only runs once and
             // startIdx = 0, endIdx = bufferLength, subsectionSize = bufferLength
@@ -161,13 +161,8 @@ void ReverserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
 
             int startIdx = i*(windowLength/2);
             int endIdx = juce::jmin((i+1)*(windowLength/2)-1, buffer.getNumSamples()-1);
-            subsection.setSize(numChannels, (endIdx+1)-startIdx);
-            for(int ch = 0; ch < numChannels; ch++)
-            {
-                subsection.copyFrom(ch, 0, buffer, ch, startIdx, subsection.getNumSamples());
-            }
-
-            inWindow.push(subsection);
+            auto sub = juce::dsp::AudioBlock<float>(buffer).getSubBlock(startIdx, (endIdx+1)-startIdx);
+            inWindow.push(sub);
 
             if(inWindow.getNumUnread() >= windowLength)
             {
@@ -250,13 +245,9 @@ void ReverserAudioProcessor::updateLength()
     }
 
     dspProcessor.setSize(numChannels, windowLength);
-    dryHalf.setSize(numChannels, windowLength/2);
-    curHalf.setSize(numChannels, windowLength/2);
-    lastHalf.setSize(numChannels, windowLength/2);
+    dspMemory.setSize(numChannels, windowLength/2);
     dspProcessor.clear();
-    dryHalf.clear();
-    curHalf.clear();
-    lastHalf.clear();
+    dspMemory.clear();
 
     inWindow.reset();
     outWindow.reset();
@@ -275,24 +266,23 @@ void ReverserAudioProcessor::updateLength()
 void ReverserAudioProcessor::runDSP()
 {
     inWindow.pop(dspProcessor,dspProcessor.getNumSamples(),dspProcessor.getNumSamples()/2);
-    mixer.setWetMixProportion(*parameters.getRawParameterValue("DRYWET"));
+
+    auto currentFrame = juce::dsp::AudioBlock<float>(dspProcessor);
+    auto firstHalf = currentFrame.getSubBlock(0, windowLength/2);
+    auto secondHalf = currentFrame.getSubBlock((windowLength/2)-1, windowLength/2);
+    auto prevHalf = juce::dsp::AudioBlock<float>(dspMemory);
     
-    for(int ch = 0; ch < numChannels; ch++)
-    {
-        dryHalf.copyFrom(ch, 0, dspProcessor, ch, 0, windowLength/2);
-    }
-    mixer.pushDrySamples(dryHalf);
-
+    mixer.setWetMixProportion(*parameters.getRawParameterValue("DRYWET"));
+    mixer.pushDrySamples(firstHalf);
     dspProcessor.reverse(0, dspProcessor.getNumSamples());
-    for(int ch = 0; ch < numChannels; ch++)
-    {
-        window.multiplyWithWindowingTable(dspProcessor.getWritePointer(ch), dspProcessor.getNumSamples());
-        curHalf.copyFrom(ch, 0, dspProcessor, ch, 0, windowLength/2);
-        curHalf.addFrom(ch, 0, lastHalf, ch, 0, windowLength/2);
-        lastHalf.copyFrom(ch, 0, dspProcessor, ch, (windowLength/2)-1, windowLength/2);
-    }
-    curHalf.applyGain(0.5);
 
-    mixer.mixWetSamples(curHalf);
-    outWindow.push(curHalf);
+    for(int ch = 0; ch < numChannels; ch++)
+        window.multiplyWithWindowingTable(currentFrame.getChannelPointer(ch), windowLength);
+
+    firstHalf.add(prevHalf);
+    firstHalf.multiplyBy(0.5);
+    mixer.mixWetSamples(firstHalf);
+    outWindow.push(firstHalf);
+
+    prevHalf.copyFrom(secondHalf);
 }

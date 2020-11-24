@@ -18,8 +18,8 @@ public:
     ASyncBuffer();
     ~ASyncBuffer();
 
-    void push(const juce::AudioBuffer<float>& inBuffer, int numToWrite = -1, int numToMark = -1, int ID = -1);
-    int pop(juce::AudioBuffer<float>& outBuffer, int numToRead = -1, int numToMark = -1, int ID = -1);
+    void push(const juce::dsp::AudioBlock<float> inBuffer, int numToWrite = -1, int numToMark = -1, int ID = -1);
+    void pop(juce::dsp::AudioBlock<float> outBuffer, int numToRead = -1, int numToMark = -1, int ID = -1);
     void reset();
     inline int getNumUnread() {return abstractFifo.getNumReady();}
 

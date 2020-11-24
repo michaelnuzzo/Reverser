@@ -14,23 +14,26 @@ ReverserAudioProcessorEditor::ReverserAudioProcessorEditor (ReverserAudioProcess
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
     getLookAndFeel().setColour(juce::Slider::textBoxTextColourId, juce::Colours::black);
+    getLookAndFeel().setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::aliceblue);
     getLookAndFeel().setColour(juce::Label::textColourId, juce::Colours::black);
     getLookAndFeel().setColour(juce::ToggleButton::ColourIds::tickColourId, juce::Colours::black);
     getLookAndFeel().setColour(juce::ToggleButton::ColourIds::tickDisabledColourId, juce::Colours::black);
 
     timeKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    timeKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
+    timeKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 100, 20);
+    timeKnob.setTextValueSuffix("ms");
     timeKnob.onValueChange = [this] {audioProcessor.setUpdate();};
     timeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.getParameters(),"TIME",timeKnob);
-    timeLabel.setText("Window Length (ms)", juce::dontSendNotification);
+    timeLabel.setText("Window Length", juce::dontSendNotification);
     timeLabel.setJustificationType(juce::Justification::horizontallyCentred);
     timeLabel.attachToComponent(&timeKnob, false);
     addAndMakeVisible(timeKnob);
 
     dryWetKnob.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    dryWetKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+    dryWetKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 100, 20);
+    dryWetKnob.setTextValueSuffix("%");
     dryWetAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.getParameters(),"DRYWET",dryWetKnob);
-    dryWetLabel.setText("Dry/Wet (%)", juce::dontSendNotification);
+    dryWetLabel.setText("Dry/Wet", juce::dontSendNotification);
     dryWetLabel.setJustificationType(juce::Justification::horizontallyCentred);
     dryWetLabel.attachToComponent(&dryWetKnob, false);
     addAndMakeVisible(dryWetKnob);

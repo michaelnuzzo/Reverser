@@ -226,7 +226,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReverserAudioProcessor::crea
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     params.push_back(std::make_unique<juce::AudioParameterFloat>("TIME","Time", juce::NormalisableRange<float>(0.f,1000.f,0.1f), 500.f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("DRYWET","DryWet", juce::NormalisableRange<float>(0.f,1.f,0.001f), 1.f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("DRYWET","DryWet", juce::NormalisableRange<float>(0.f,100.f,0.1f), 100.f));
     params.push_back(std::make_unique<juce::AudioParameterBool>("CROSSFADE","Crossfade",true));
     return { params.begin(), params.end() };
 }
@@ -275,7 +275,7 @@ void ReverserAudioProcessor::updateLength()
 
 void ReverserAudioProcessor::runDSP()
 {
-    mixer.setWetMixProportion(*parameters.getRawParameterValue("DRYWET"));
+    mixer.setWetMixProportion(*parameters.getRawParameterValue("DRYWET")/100.);
 
     if(crossfade)
     {

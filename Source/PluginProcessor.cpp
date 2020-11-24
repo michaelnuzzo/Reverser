@@ -148,9 +148,9 @@ void ReverserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         updateLength();
     }
 
-    if(windowLength/2 > 1)
+    if(frameLength > 1)
     {
-        for(int i = 0; i <= int(buffer.getNumSamples()-1)/(windowLength/2); i++)
+        for(int i = 0; i <= int(buffer.getNumSamples()-1)/frameLength; i++)
         {
             // if windowLength > bufferLength, then this only runs once and
             // startIdx = 0, endIdx = bufferLength, subsectionSize = bufferLength
@@ -159,8 +159,8 @@ void ReverserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
             // startIdx = i*windowLength, endIdx = start + i*windowLength, subsectionSize = windowLength
             // This loop is designed to always read the full bufferLength, while also processing every windowLength.
 
-            int startIdx = i*(windowLength/2);
-            int endIdx = juce::jmin((i+1)*(windowLength/2)-1, buffer.getNumSamples()-1);
+            int startIdx = i*frameLength;
+            int endIdx = juce::jmin((i+1)*frameLength-1, buffer.getNumSamples()-1);
             auto sub = juce::dsp::AudioBlock<float>(buffer).getSubBlock(startIdx, (endIdx+1)-startIdx);
             inWindow.push(sub);
 
@@ -227,17 +227,19 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReverserAudioProcessor::crea
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     params.push_back(std::make_unique<juce::AudioParameterFloat>("TIME","Time", juce::NormalisableRange<float>(0.f,1000.f,0.1f), 500.f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("DRYWET","DryWet", juce::NormalisableRange<float>(0.f,1.f,0.001f), 1.f));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("CROSSFADE","Crossfade",true));
     return { params.begin(), params.end() };
 }
 
 void ReverserAudioProcessor::updateLength()
 {
     reverserLength = *parameters.getRawParameterValue("TIME");
+    crossfade = *parameters.getRawParameterValue("CROSSFADE");
 
     if(reverserLength*getSampleRate() > 0)
     {
         windowLength = reverserLength/1000.f*getSampleRate();
-        windowLength = 2*(int)(windowLength/2.);
+        windowLength = 2*(int)(windowLength/2.); // make sure the length is even
     }
     else
     {
@@ -245,44 +247,64 @@ void ReverserAudioProcessor::updateLength()
     }
 
     dspProcessor.setSize(numChannels, windowLength);
-    dspMemory.setSize(numChannels, windowLength/2);
     dspProcessor.clear();
-    dspMemory.clear();
+
+    if(crossfade)
+    {
+        frameLength = windowLength/2;
+        dspMemory.setSize(numChannels, frameLength);
+        dspMemory.clear();
+        window.fillWindowingTables(windowLength, juce::dsp::WindowingFunction<float>::triangular);
+        
+        juce::AudioBuffer<float> initializeWithZeros;
+        initializeWithZeros.setSize(numChannels, frameLength);
+        initializeWithZeros.clear();
+        inWindow.push(initializeWithZeros);
+        outWindow.push(initializeWithZeros);
+    }
+    else
+    {
+        frameLength = windowLength;
+    }
 
     inWindow.reset();
     outWindow.reset();
 
-    juce::AudioBuffer<float> initializeWithZeros;
-    initializeWithZeros.setSize(numChannels, windowLength/2);
-    initializeWithZeros.clear();
-    inWindow.push(initializeWithZeros);
-    outWindow.push(initializeWithZeros);
-
-    window.fillWindowingTables(windowLength, juce::dsp::WindowingFunction<float>::triangular);
-    
     requiresUpdate = false;
 }
 
 void ReverserAudioProcessor::runDSP()
 {
-    inWindow.pop(dspProcessor,dspProcessor.getNumSamples(),dspProcessor.getNumSamples()/2);
-
-    auto currentFrame = juce::dsp::AudioBlock<float>(dspProcessor);
-    auto firstHalf = currentFrame.getSubBlock(0, windowLength/2);
-    auto secondHalf = currentFrame.getSubBlock((windowLength/2)-1, windowLength/2);
-    auto prevHalf = juce::dsp::AudioBlock<float>(dspMemory);
-    
     mixer.setWetMixProportion(*parameters.getRawParameterValue("DRYWET"));
-    mixer.pushDrySamples(firstHalf);
-    dspProcessor.reverse(0, dspProcessor.getNumSamples());
 
-    for(int ch = 0; ch < numChannels; ch++)
-        window.multiplyWithWindowingTable(currentFrame.getChannelPointer(ch), windowLength);
+    if(crossfade)
+    {
+        inWindow.pop(dspProcessor,windowLength,frameLength);
 
-    firstHalf.add(prevHalf);
-    firstHalf.multiplyBy(0.5);
-    mixer.mixWetSamples(firstHalf);
-    outWindow.push(firstHalf);
+        auto currentWindow = juce::dsp::AudioBlock<float>(dspProcessor);
+        auto firstHalf = currentWindow.getSubBlock(0, frameLength);
+        auto secondHalf = currentWindow.getSubBlock(frameLength, frameLength);
+        auto prevHalf = juce::dsp::AudioBlock<float>(dspMemory);
 
-    prevHalf.copyFrom(secondHalf);
+        mixer.pushDrySamples(firstHalf);
+        dspProcessor.reverse(0, windowLength);
+
+        for(int ch = 0; ch < numChannels; ch++)
+            window.multiplyWithWindowingTable(currentWindow.getChannelPointer(ch), windowLength);
+
+        firstHalf.add(prevHalf);
+        firstHalf.multiplyBy(0.5);
+        mixer.mixWetSamples(firstHalf);
+        outWindow.push(firstHalf);
+        
+        prevHalf.copyFrom(secondHalf);
+    }
+    else
+    {
+        inWindow.pop(dspProcessor);
+        mixer.pushDrySamples(dspProcessor);
+        dspProcessor.reverse(0,windowLength);
+        mixer.mixWetSamples(dspProcessor);
+        outWindow.push(dspProcessor);
+    }
 }

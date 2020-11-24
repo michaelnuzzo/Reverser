@@ -66,6 +66,8 @@ private:
     bool requiresUpdate = true;
     float reverserLength; // in seconds
     int windowLength; // in samples
+    int frameLength;
+    bool crossfade = false;
     ASyncBuffer inWindow;
     ASyncBuffer outWindow;
     juce::AudioProcessorValueTreeState parameters;

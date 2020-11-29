@@ -2,7 +2,7 @@
 
 # Reverser
 
-<img width="600px" src="docs/imgs/screenshot.jpg">
+<img width="600px" src="docs/imgs/screenshot.png">
 
 </div>
 

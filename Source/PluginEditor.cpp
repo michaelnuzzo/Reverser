@@ -72,7 +72,7 @@ void ReverserAudioProcessorEditor::paint (juce::Graphics& g)
     juce::Image logo = juce::ImageCache::getFromMemory (BinaryData::logo_png, BinaryData::logo_pngSize);
     logo = logo.rescaled(logo.getWidth()/2., logo.getHeight()/2.);
     float xPos = getWidth()/2.-logo.getWidth()/2.;
-    float yPos = getHeight()/3.-logo.getHeight()/2.;
+    float yPos = getHeight()/4.-logo.getHeight()/2.;
 
     g.drawImageAt(logo, xPos, yPos);
 }
@@ -82,11 +82,10 @@ void ReverserAudioProcessorEditor::resized()
     float knobWidth = 150;
     float xPos1 = getWidth()/3.-knobWidth/2.;
     float xPos2 = 2*getWidth()/3.-knobWidth/2.;
-    float yPos = getHeight()-300;
+    float yPos = getHeight()/2;
 
     timeKnob.setBounds(xPos1, yPos,knobWidth,knobWidth);
     dryWetKnob.setBounds(xPos2, yPos,knobWidth,knobWidth);
-    crossfadeButton.setBounds(getWidth()/2, getHeight()-100, 100, 100);
-    dryWetAlignButton.setBounds(getWidth()/2, getHeight()-150, 100, 100);
-
+    crossfadeButton.setBounds(getWidth()/2, getHeight()-50, 25, 25);
+    dryWetAlignButton.setBounds(getWidth()/2, getHeight()-100, 25, 25);
 }

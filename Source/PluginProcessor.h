@@ -56,7 +56,7 @@ public:
 
     void runDSP();
     inline void setUpdate() {requiresUpdate = true;}
-    void updateLength();
+    void updateParameters();
 
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     juce::AudioProcessorValueTreeState& getParameters() {return parameters;}
@@ -67,7 +67,8 @@ private:
     float reverserLength; // in seconds
     int windowLength; // in samples
     int frameLength;
-    bool crossfade = false;
+    bool crossfade;
+    bool dryWetAlign;
     ASyncBuffer inWindow;
     ASyncBuffer outWindow;
     juce::AudioProcessorValueTreeState parameters;

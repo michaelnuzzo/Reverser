@@ -44,7 +44,7 @@ namespace ProjectInfo
 {
     const char* const  projectName    = "Reverser";
     const char* const  companyName    = "Michael Nuzzo";
-    const char* const  versionString  = "0.2.0";
-    const int          versionNumber  = 0x200;
+    const char* const  versionString  = "0.2.2";
+    const int          versionNumber  = 0x202;
 }
 #endif

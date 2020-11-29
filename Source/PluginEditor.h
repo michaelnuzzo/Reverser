@@ -29,11 +29,11 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     ReverserAudioProcessor& audioProcessor;
-    juce::Label timeLabel, dryWetLabel, crossfadeLabel;
+    juce::Label timeLabel, dryWetLabel, crossfadeLabel, dryWetAlignLabel;
     juce::Slider timeKnob, dryWetKnob;
-    juce::ToggleButton crossfadeButton;
+    juce::ToggleButton crossfadeButton, dryWetAlignButton;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> timeAttachment, dryWetAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> crossfadeAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> crossfadeAttachment, dryWetAlignAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ReverserAudioProcessorEditor)
 };

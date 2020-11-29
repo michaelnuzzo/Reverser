@@ -145,7 +145,12 @@ void ReverserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
 
     if(requiresUpdate)
     {
-        updateLength();
+        updateParameters();
+    }
+
+    if(!dryWetAlign)
+    {
+        mixer.pushDrySamples(buffer);
     }
 
     if(frameLength > 1)
@@ -178,6 +183,11 @@ void ReverserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         {
             buffer.clear();
         }
+    }
+
+    if(!dryWetAlign)
+    {
+        mixer.mixWetSamples(buffer);
     }
 }
 
@@ -228,13 +238,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReverserAudioProcessor::crea
     params.push_back(std::make_unique<juce::AudioParameterFloat>("TIME","Time", juce::NormalisableRange<float>(0.f,1000.f,0.1f), 500.f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("DRYWET","DryWet", juce::NormalisableRange<float>(0.f,100.f,0.1f), 100.f));
     params.push_back(std::make_unique<juce::AudioParameterBool>("CROSSFADE","Crossfade",true));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("DRYWETALIGN","DryWetAlign",true));
     return { params.begin(), params.end() };
 }
 
-void ReverserAudioProcessor::updateLength()
+void ReverserAudioProcessor::updateParameters()
 {
     reverserLength = *parameters.getRawParameterValue("TIME");
     crossfade = *parameters.getRawParameterValue("CROSSFADE");
+    dryWetAlign = *parameters.getRawParameterValue("DRYWETALIGN");
+    mixer.setWetMixProportion(*parameters.getRawParameterValue("DRYWET")/100.);
 
     if(reverserLength*getSampleRate() > 0)
     {
@@ -275,8 +288,6 @@ void ReverserAudioProcessor::updateLength()
 
 void ReverserAudioProcessor::runDSP()
 {
-    mixer.setWetMixProportion(*parameters.getRawParameterValue("DRYWET")/100.);
-
     if(crossfade)
     {
         inWindow.pop(dspProcessor,windowLength,frameLength);
@@ -286,7 +297,11 @@ void ReverserAudioProcessor::runDSP()
         auto secondHalf = currentWindow.getSubBlock(frameLength, frameLength);
         auto prevHalf = juce::dsp::AudioBlock<float>(dspMemory);
 
-        mixer.pushDrySamples(firstHalf);
+        if(dryWetAlign)
+        {
+            mixer.pushDrySamples(firstHalf);
+        }
+        
         dspProcessor.reverse(0, windowLength);
 
         for(int ch = 0; ch < numChannels; ch++)
@@ -294,7 +309,10 @@ void ReverserAudioProcessor::runDSP()
 
         firstHalf.add(prevHalf);
         firstHalf.multiplyBy(0.5);
-        mixer.mixWetSamples(firstHalf);
+        if(dryWetAlign)
+        {
+            mixer.mixWetSamples(firstHalf);
+        }
         outWindow.push(firstHalf);
         
         prevHalf.copyFrom(secondHalf);

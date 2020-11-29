@@ -32,6 +32,7 @@ ReverserAudioProcessorEditor::ReverserAudioProcessorEditor (ReverserAudioProcess
     dryWetKnob.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     dryWetKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 100, 20);
     dryWetKnob.setTextValueSuffix("%");
+    dryWetKnob.onValueChange = [this] {audioProcessor.setUpdate();};
     dryWetAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.getParameters(),"DRYWET",dryWetKnob);
     dryWetLabel.setText("Dry/Wet", juce::dontSendNotification);
     dryWetLabel.setJustificationType(juce::Justification::horizontallyCentred);
@@ -43,8 +44,14 @@ ReverserAudioProcessorEditor::ReverserAudioProcessorEditor (ReverserAudioProcess
     crossfadeLabel.setText("Crossfade", juce::dontSendNotification);
     crossfadeLabel.setJustificationType(juce::Justification::horizontallyCentred);
     crossfadeLabel.attachToComponent(&crossfadeButton, true);
-
     addAndMakeVisible(crossfadeButton);
+
+    dryWetAlignButton.onClick = [this] {audioProcessor.setUpdate();};
+    dryWetAlignAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.getParameters(),"DRYWETALIGN",dryWetAlignButton);
+    dryWetAlignLabel.setText("Align Dry/Wet", juce::dontSendNotification);
+    dryWetAlignLabel.setJustificationType(juce::Justification::horizontallyCentred);
+    dryWetAlignLabel.attachToComponent(&dryWetAlignButton, true);
+    addAndMakeVisible(dryWetAlignButton);
 
     setResizable(true, true);
     setResizeLimits(400, 600, 1600, 900);
@@ -62,11 +69,9 @@ void ReverserAudioProcessorEditor::paint (juce::Graphics& g)
     g.fillAll (juce::Colours::aliceblue);
     g.setFont (15.0f);
 
-
-
     juce::Image logo = juce::ImageCache::getFromMemory (BinaryData::logo_png, BinaryData::logo_pngSize);
     logo = logo.rescaled(logo.getWidth()/2., logo.getHeight()/2.);
-    float xPos = getWidth()/2.-logo.getWidth()/2.-8;
+    float xPos = getWidth()/2.-logo.getWidth()/2.;
     float yPos = getHeight()/3.-logo.getHeight()/2.;
 
     g.drawImageAt(logo, xPos, yPos);
@@ -82,4 +87,6 @@ void ReverserAudioProcessorEditor::resized()
     timeKnob.setBounds(xPos1, yPos,knobWidth,knobWidth);
     dryWetKnob.setBounds(xPos2, yPos,knobWidth,knobWidth);
     crossfadeButton.setBounds(getWidth()/2, getHeight()-100, 100, 100);
+    dryWetAlignButton.setBounds(getWidth()/2, getHeight()-150, 100, 100);
+
 }

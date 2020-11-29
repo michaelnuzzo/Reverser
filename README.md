@@ -1,3 +1,10 @@
+<div  align="center">
+
 # Reverser
 
-![Reverser Screenshot](docs/imgs/screenshot.png)
+<img width="600px" src="docs/imgs/screenshot.jpg">
+
+</div>
+
+## Overview
+

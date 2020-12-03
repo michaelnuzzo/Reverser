@@ -2,13 +2,16 @@
 
 # Reverser
 
-<img width="600px" src="docs/imgs/reverser logo 2.png">
+<img width="400px" src="docs/imgs/reverser logo 2.png">
 
 </div>
 
 ## Overview
 
 The Reverser is a real-time VST plugin that splits incoming audio into chunks and then reverses each chunk.
+
+<img width="600px" src="docs/imgs/screenshot.png">
+
 
 
 ## Install

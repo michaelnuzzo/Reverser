@@ -8,7 +8,7 @@
 
 ## Overview
 
-The Reverser is a real-time VST plugin that splits incoming audio into chunks and then reverses each chunk.
+The Reverser is a real-time VST plugin that splits incoming audio into chunks and reverses each chunk.
 
 <div  align="center">
 

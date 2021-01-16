@@ -1,7 +1,5 @@
 <div  align="center">
 
-# Reverser
-
 <img width="400px" src="docs/imgs/reverser logo 3.png">
 
 </div>

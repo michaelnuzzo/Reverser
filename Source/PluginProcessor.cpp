@@ -235,10 +235,10 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 juce::AudioProcessorValueTreeState::ParameterLayout ReverserAudioProcessor::createParameters()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("TIME","Time", juce::NormalisableRange<float>(0.f,1000.f,0.1f), 500.f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("DRYWET","DryWet", juce::NormalisableRange<float>(0.f,100.f,0.1f), 100.f));
-    params.push_back(std::make_unique<juce::AudioParameterBool>("CROSSFADE","Crossfade",true));
-    params.push_back(std::make_unique<juce::AudioParameterBool>("DRYWETALIGN","DryWetAlign",true));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"TIME", 1} ,"Time", juce::NormalisableRange<float>(0.f,1000.f,0.1f), 500.f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"DRYWET", 1} ,"DryWet", juce::NormalisableRange<float>(0.f,100.f,0.1f), 100.f));
+    params.push_back(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"CROSSFADE", 1} ,"Crossfade",true));
+    params.push_back(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"DRYWETALIGN", 1} ,"DryWetAlign",true));
     return { params.begin(), params.end() };
 }
 
